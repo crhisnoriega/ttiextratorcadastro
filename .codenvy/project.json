@@ -1,0 +1,1 @@
+{"builders":{"default":"maven"},"runners":{"configs":{"system:/java/standalone/simple/gui":{"ram":0,"variables":{},"options":{}}},"default":"system:/java/standalone/simple/gui"},"type":"maven","attributes":{}}
