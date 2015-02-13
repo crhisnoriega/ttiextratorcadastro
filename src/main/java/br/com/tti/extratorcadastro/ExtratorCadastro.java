@@ -1,19 +1,42 @@
 package br.com.tti.extratorcadastro;
 
+import br.com.tti.extratorcadastro.db.ConexaoBancoDados;
 import br.com.tti.extratorcadastro.xml.esquemas.nfe.TNFe;
 import br.com.tti.extratorcadastro.xml.XMLGenerator;
 import br.com.tti.extratorcadastro.xml.esquemas.nfe.TNFe.InfNFe;
 
 public class ExtratorCadastro {
 
+	private ConexaoBancoDados conx;
+
+	public ExtratorCadastro() {
+		try {
+			this.conx = new ConexaoBancoDados(
+					"jdbc:jtds:sqlserver://mysqlserver.cqrgys6g7chq.sa-east-1.rds.amazonaws.com",
+					"net.sourceforge.jtds.jdbc.Driver", "ttidb", "ttidb415");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+
+	// /////////////////////////////////////////////////////
+	// /////////////////////////////////////////////////////
+	// /////////////////////////////////////////////////////
 	public static void main(String[] args) {
+		ExtratorCadastro ex = new ExtratorCadastro();
+
 		TNFe t1 = new TNFe();
 		t1.setInfNFe(new InfNFe());
 		t1.getInfNFe().setId("MyID");
 
 		try {
+
 		
         XMLGenerator gen = new XMLGenerator("br.com.tti.extratorcadastro.xml.esquemas.nfe");
+
+		
 			String xml1 = gen.toXMLString(t1);
 			System.out.println("xml: " + gen.toXMLString(t1));
 			javax.xml.bind.JAXBElement<TNFe> t2 = (javax.xml.bind.JAXBElement<TNFe>) gen
