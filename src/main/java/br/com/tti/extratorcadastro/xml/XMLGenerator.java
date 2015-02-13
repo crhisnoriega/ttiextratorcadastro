@@ -1,4 +1,4 @@
-package br.com.tti.tools;
+package br.com.tti.extratorcadastro.xml;
 
 import java.io.File;
 import java.io.FileOutputStream;

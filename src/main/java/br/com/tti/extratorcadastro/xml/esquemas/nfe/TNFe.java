@@ -6,7 +6,7 @@
 //
 
 
-package br.com.tti.nfev200;
+package br.com.tti.extratorcadastro.xml.esquemas.nfe;
 
 import java.util.ArrayList;
 import java.util.List;

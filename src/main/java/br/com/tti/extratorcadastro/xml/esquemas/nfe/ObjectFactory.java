@@ -6,7 +6,7 @@
 //
 
 
-package br.com.tti.nfev200;
+package br.com.tti.extratorcadastro.xml.esquemas.nfe;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlElementDecl;
