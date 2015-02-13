@@ -13,4 +13,8 @@ public class ConexaoBancoDados {
         return super.equals(arg0);
     }
 
+
+  public String getURL(){
+	return this.url;
+  }
 }
