@@ -1,11 +1,3 @@
-/*
- * GenerateXML.java
- *
- * Created on 08/01/2008, 10:21:07
- *
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package br.com.tti.tools;
 
 import java.io.File;
