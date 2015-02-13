@@ -12,7 +12,8 @@ public class ExtratorCadastro {
 		t1.getInfNFe().setId("MyID");
 
 		try {
-			XMLGenerator gen = new XMLGenerator("br.com.tti.extratorcadastro.xml.esquemas.nfe");
+		
+        XMLGenerator gen = new XMLGenerator("br.com.tti.extratorcadastro.xml.esquemas.nfe");
 			String xml1 = gen.toXMLString(t1);
 			System.out.println("xml: " + gen.toXMLString(t1));
 			javax.xml.bind.JAXBElement<TNFe> t2 = (javax.xml.bind.JAXBElement<TNFe>) gen
