@@ -38,7 +38,17 @@ public class ExtratorCadastro {
 			this.ultimaData = this.sdf.parse(ReadFile.readFile("ultimadata"));
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
+<<<<<<< HEAD
 			this.updateUltimaData();
+=======
+			try {
+				ReadFile.writeFile("ultimadata",
+						this.sdf.format(Calendar.getInstance().getTime())
+								.toCharArray(), "UTF-8");
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+>>>>>>> 2a6e5fd85d0893a2c629ba67b07d877853e5538f
 			this.ultimaData = Calendar.getInstance().getTime();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -46,6 +56,7 @@ public class ExtratorCadastro {
 
 	}
 
+<<<<<<< HEAD
 	private void updateUltimaData() {
 		try {
 			ReadFile.writeFile("ultimadata",
@@ -56,6 +67,8 @@ public class ExtratorCadastro {
 		}
 	}
 
+=======
+>>>>>>> 2a6e5fd85d0893a2c629ba67b07d877853e5538f
 	public void extract() throws Exception {
 		ExcelDocumentoGenerador excelgen = new ExcelDocumentoGenerador(
 				"log_reg.1", new Hashtable<String, String>());
@@ -69,7 +82,10 @@ public class ExtratorCadastro {
 		}
 
 		File excelfile = excelgen.getFile();
+<<<<<<< HEAD
 		this.updateUltimaData();
+=======
+>>>>>>> 2a6e5fd85d0893a2c629ba67b07d877853e5538f
 	}
 
 	// /////////////////////////////////////////////////////

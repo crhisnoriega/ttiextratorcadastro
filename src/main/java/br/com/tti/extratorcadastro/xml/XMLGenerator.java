@@ -48,15 +48,18 @@ public class XMLGenerator {
 	synchronized public String toXMLString(Object obj) throws Exception {
 		StringWriter w = new StringWriter();
 		this.marshaller.marshal(obj, w);
+		this.marshaller.setProperty(Marshaller.JAXB_ENCODING, "ISO-8859-1");
 		return w.toString();
 	}
 
 	synchronized public Object toObjectFromFile(File file) throws Exception {
+		this.unmarshaller.setProperty(Marshaller.JAXB_ENCODING, "ISO-8859-1");
 		return unmarshaller.unmarshal(file);
 	}
 
 	synchronized public Object toObject(String str) throws Exception {
 		StringReader r = new StringReader(str);
+		this.unmarshaller.setProperty(Marshaller.JAXB_ENCODING, "ISO-8859-1");
 		return unmarshaller.unmarshal(r);
 	}
 
