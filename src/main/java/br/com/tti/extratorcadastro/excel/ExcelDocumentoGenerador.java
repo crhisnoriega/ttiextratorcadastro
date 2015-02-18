@@ -5,9 +5,12 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.Vector;
 
 import org.apache.poi.hssf.usermodel.HSSFCell;
@@ -22,6 +25,13 @@ import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+
+import br.com.tti.extratorcadastro.ExtratorCadastro;
+import br.com.tti.extratorcadastro.excel.ExcelDocumentoGenerador.ObjectMethodPair;
+import br.com.tti.extratorcadastro.xml.esquemas.cte.TEndeEmi;
+import br.com.tti.extratorcadastro.xml.esquemas.nfe.TEnderEmi;
+import br.com.tti.extratorcadastro.xml.esquemas.nfe.TEndereco;
+import br.com.tti.extratorcadastro.xml.esquemas.nfe.TNFe.InfNFe.Emit;
 
 public class ExcelDocumentoGenerador {
 
@@ -38,25 +48,76 @@ public class ExcelDocumentoGenerador {
 
 	private String tmpFile;
 
+	private String[] keys = new String[] { "CNPJ", "CPF", "XNome", "XFant",
+			"IE", "CEP", "XLgr", "Nro", "XBairro", "XMun", "CMun", "XCpl",
+			"Fone", "CPais", "XPais" };
+
 	public ExcelDocumentoGenerador(String tmpFile,
 			Hashtable<String, String> headerdata) {
 		super();
 		this.tmpFile = tmpFile;
 		this.headerdata = headerdata;
 		this.sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-	}
-
-	public void fillEmitenteNFe(
-			br.com.tti.extratorcadastro.xml.esquemas.nfe.TNFe.InfNFe.Emit emitente,
-			CellStyle cs) {
-		Row row = sheet.createRow(this.counter++);
-		row.createCell(0).setCellValue(
-				emitente.getCNPJ() != null ? emitente.getCNPJ() : emitente
-						.getCPF());
 
 	}
 
-	public void createHeader() {
+	private boolean hasHeader = false;
+
+	public void fill(Object info) {
+
+		Hashtable<String, ObjectMethodPair> vv = extractAttributes(info);
+
+		if (!this.hasHeader) {
+			this.createHeader(vv);
+			this.hasHeader = true;
+		}
+
+		if (!vv.isEmpty()) {
+			this.createRow(vv);
+		}
+
+	}
+
+	private void createHeader(Hashtable<String, ObjectMethodPair> vv) {
+		Row header = this.sheet.createRow(this.counter++);
+		System.out.println(header);
+
+		int counter = 0;
+		for (String key : this.keys) {
+			header.createCell(counter++).setCellValue("\"" + key + "\"");
+		}
+
+	}
+
+	private void createRow(Hashtable<String, ObjectMethodPair> vv) {
+		Row header = this.sheet.createRow(this.counter++);
+
+		int counter = 0;
+
+		/*
+		 * header.createCell(counter++).setCellValue(
+		 * vv.get(0).getObj().getClass().getSimpleName());
+		 */
+		for (String key : this.keys) {
+			ObjectMethodPair pair = vv.get(key);
+
+			if (pair == null) {
+				header.createCell(counter++).setCellValue("");
+				continue;
+			}
+
+			Object value = "NADA";
+			try {
+				value = pair.getMethod().invoke(pair.getObj(), new Object[] {});
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			if (value == null) {
+				value = "";
+			}
+			header.createCell(counter++).setCellValue(value + "");
+		}
 
 	}
 
@@ -133,33 +194,99 @@ public class ExcelDocumentoGenerador {
 		// set the sheet name in Unicode
 		this.workbook.setSheetName(0, "emitentes");
 
-		this.sheet.setColumnWidth(0, 400 * 10);
-		this.sheet.setColumnWidth(1, 400 * 10);
+		this.sheet.setColumnWidth(0, 400 * 14);
+		this.sheet.setColumnWidth(1, 400 * 7);
 		this.sheet.setColumnWidth(2, 400 * 14);
 		this.sheet.setColumnWidth(3, 400 * 14);
-		this.sheet.setColumnWidth(4, 400 * 30);
+		this.sheet.setColumnWidth(4, 400 * 14);
 		this.sheet.setColumnWidth(5, 400 * 14);
 		this.sheet.setColumnWidth(6, 400 * 14);
-		this.sheet.setColumnWidth(7, 400 * 34);
-
-		Row header = this.sheet.createRow(this.counter++);
-		header.createCell(0).setCellValue("\"cnpj\"");
-		header.createCell(1).setCellValue("\"\"");
-		header.createCell(2).setCellValue("\"docnum\"");
-		header.createCell(3).setCellValue("\"num_nf\"");
-		header.createCell(4).setCellValue("\"serie\"");
-		header.createCell(5).setCellValue("\"cgc_cpf\"");
-		header.createCell(6).setCellValue("\"tota_da_nota\"");
-		header.createCell(7).setCellValue("\"chave\"");
-		header.createCell(8).setCellValue("\"destinatario\"");
-
+		this.sheet.setColumnWidth(7, 400 * 14);
+		this.sheet.setColumnWidth(8, 400 * 14);
+		this.sheet.setColumnWidth(9, 400 * 14);
+		this.sheet.setColumnWidth(10, 400 * 14);
+		this.sheet.setColumnWidth(11, 400 * 14);
+		this.sheet.setColumnWidth(12, 400 * 14);
 	}
 
 	public File generatePDF() {
 		return this.fileout;
 	}
 
+	public static class ObjectMethodPair {
+		private Object obj;
+		private Method method;
+
+		public Object getObj() {
+			return obj;
+		}
+
+		public void setObj(Object obj) {
+			this.obj = obj;
+		}
+
+		public Method getMethod() {
+			return method;
+		}
+
+		public void setMethod(Method method) {
+			this.method = method;
+		}
+
+	}
+
+	public static Hashtable<String, ObjectMethodPair> extractAttributes(
+			Object obj) {
+		Hashtable<String, ObjectMethodPair> att = new Hashtable<String, ObjectMethodPair>();
+		if (obj == null) {
+			return att;
+		}
+
+		Method[] methods = obj.getClass().getDeclaredMethods();
+
+		for (Method method : methods) {
+			if (method.getName().startsWith("get")
+					&& method.getParameterTypes().length == 0) {
+				if (method.getReturnType().equals(String.class)
+						|| method.getReturnType().equals(Integer.class)) {
+					ObjectMethodPair methodPair = new ObjectMethodPair();
+					methodPair.setMethod(method);
+					methodPair.setObj(obj);
+					att.put(method.getName().replace("get", ""), methodPair);
+				} else {
+
+					try {
+						method.setAccessible(true);
+						Object obj1 = method.invoke(obj, new Object[] {});
+
+						if (obj1 != null) {
+							Hashtable<String, ObjectMethodPair> mm = extractAttributes(obj1);
+							att.putAll(mm);
+
+						}
+					} catch (Throwable e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+
+		return att;
+	}
+
 	public static void main(String[] args) {
+
+		Emit ee = new Emit();
+		ee.setEnderEmit(new TEnderEmi());
+		/*
+		 * Vector<ObjectMethodPair> mm = ExcelDocumentoGenerador
+		 * .extractAttributes(ee); for (ObjectMethodPair methodpair : mm) {
+		 * System.out.println(methodpair.getMethod().getName() + " -> " +
+		 * methodpair.getObj()); } System.out.println();
+		 */
+	}
+
+	public static void main2(String[] args) {
 		try {
 			HSSFWorkbook workbook = new HSSFWorkbook(new FileInputStream(
 					"C:\\teste.xls"));

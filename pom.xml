@@ -23,7 +23,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>br.com.tti.extratorcadastro.ExtratorCadastro</mainClass>
+							<mainClass>br.com.tti.extratorcadastro.main.Launch</mainClass>
 							<addClasspath>true</addClasspath>
 							<classpathPrefix>lib/</classpathPrefix>
 						</manifest>
@@ -83,8 +83,8 @@
 				</plugin>
 			</plugins>
 		</pluginManagement>
-		
-		
+
+
 	</build>
 
 	<dependencies>
@@ -93,7 +93,7 @@
 			<artifactId>jaxb-api</artifactId>
 			<version>2.2.12</version>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>com.sun.xml.bind</groupId>
 			<artifactId>jaxb-impl</artifactId>
 			<version>2.2.11</version>
@@ -102,7 +102,7 @@
 			<groupId>org.glassfish.jaxb</groupId>
 			<artifactId>jaxb-runtime</artifactId>
 			<version>2.2.11</version>
-		</dependency>
+		</dependency> -->
 
 		<dependency>
 			<groupId>net.sourceforge.jtds</groupId>
