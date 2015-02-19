@@ -73,14 +73,13 @@ public class ExcelDocumentoGenerador {
 		}
 
 		if (!vv.isEmpty()) {
-			this.createRow(vv);
+			this.createRow(vv, info.getClass());
 		}
 
 	}
 
 	private void createHeader(Hashtable<String, ObjectMethodPair> vv) {
 		Row header = this.sheet.createRow(this.counter++);
-		System.out.println(header);
 
 		int counter = 0;
 		for (String key : this.keys) {
@@ -89,15 +88,12 @@ public class ExcelDocumentoGenerador {
 
 	}
 
-	private void createRow(Hashtable<String, ObjectMethodPair> vv) {
+	private void createRow(Hashtable<String, ObjectMethodPair> vv,
+			Class<? extends Object> class1) {
 		Row header = this.sheet.createRow(this.counter++);
 
 		int counter = 0;
 
-		/*
-		 * header.createCell(counter++).setCellValue(
-		 * vv.get(0).getObj().getClass().getSimpleName());
-		 */
 		for (String key : this.keys) {
 			ObjectMethodPair pair = vv.get(key);
 
@@ -118,6 +114,8 @@ public class ExcelDocumentoGenerador {
 			}
 			header.createCell(counter++).setCellValue(value + "");
 		}
+
+		header.createCell(counter++).setCellValue(class1.getSimpleName());
 
 	}
 

@@ -11,7 +11,7 @@ public class Launch {
 			XMLConfigSystem confsys = new XMLConfigSystem(args[0]);
 			ConfiguracaoSistema conf = confsys.getFileConfig()
 					.getConfiguracaoSistema();
-			ExtratorCadastro cad = new ExtratorCadastro(conf);
+			ExtratorCadastro cad = new ExtratorCadastro(conf, args[1]);
 			cad.extract();
 		} catch (Exception e) {
 			e.printStackTrace();

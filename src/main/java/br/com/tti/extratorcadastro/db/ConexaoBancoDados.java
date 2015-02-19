@@ -94,7 +94,6 @@ public class ConexaoBancoDados {
 		ResultSet result = stat.executeQuery();
 
 		while (result.next()) {
-			System.out.println(result.getString("ID"));
 			String xmlstring = result.getString("XMLSTRING");
 			xmls.add(xmlstring);
 		}

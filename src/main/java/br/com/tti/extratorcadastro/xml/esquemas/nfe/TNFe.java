@@ -26338,7 +26338,7 @@ public class TNFe {
                 "xMun",
                 "uf"
             })
-            public static class Transporta {
+			public static class Transporta {
 
                 @XmlElement(name = "CNPJ")
                 protected String cnpj;

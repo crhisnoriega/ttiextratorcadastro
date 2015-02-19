@@ -15,6 +15,7 @@ import javax.xml.bind.JAXBElement;
 
 import br.com.tti.extratorcadastro.db.ConexaoBancoDados;
 import br.com.tti.extratorcadastro.db.ConexaoBancoDados.TIPO_BANCO;
+import br.com.tti.extratorcadastro.email.EmailSender;
 import br.com.tti.extratorcadastro.excel.ExcelDocumentoGenerador;
 import br.com.tti.extratorcadastro.xml.XMLGenerator;
 import br.com.tti.extratorcadastro.xml.esquemas.cte.TCTe;
@@ -26,14 +27,23 @@ import br.com.tti.tools.ReadFile;
 public class ExtratorCadastro {
 
 	private ConexaoBancoDados conx;
+	private EmailSender emailSender;
 	private Date ultimaData;
 	private SimpleDateFormat sdf;
+	private String email;
 
-	public ExtratorCadastro(ConfiguracaoSistema conf) {
+	public ExtratorCadastro(ConfiguracaoSistema conf, String email) {
 		this.sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:SSS");
+		this.email = email;
 
 		try {
 			this.conx = new ConexaoBancoDados(conf);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		try {
+			this.emailSender = new EmailSender();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -115,8 +125,11 @@ public class ExtratorCadastro {
 	}
 
 	public void extract() throws Exception {
+		File tmpfile = new File(System.getProperty("user.dir") + File.separator
+				+ File.createTempFile("log_tti", ".log").getName());
+
 		ExcelDocumentoGenerador excelgen = new ExcelDocumentoGenerador(
-				"log_reg.1.xls", new Hashtable<String, String>());
+				tmpfile.getAbsolutePath(), new Hashtable<String, String>());
 		excelgen.init();
 
 		XMLGenerator nfeXMLGen = new XMLGenerator(
@@ -129,14 +142,13 @@ public class ExtratorCadastro {
 			if (xmlString == null) {
 				continue;
 			}
-			System.out.println(xmlString.substring(0, 30));
 			if (xmlString.contains("<NFe")) {
 				xmlString = this.extractNFeXML(xmlString);
 				TNFe nfe = ((JAXBElement<TNFe>) nfeXMLGen.toObject(xmlString))
 						.getValue();
 				excelgen.fill(nfe.getInfNFe().getEmit());
-				// excelgen.fill(nfe.getInfNFe().getDest());
-				// excelgen.fill(nfe.getInfNFe().getTransp());
+				excelgen.fill(nfe.getInfNFe().getDest());
+				excelgen.fill(nfe.getInfNFe().getTransp().getTransporta());
 			}
 
 			if (xmlString.contains("<CTe")) {
@@ -155,15 +167,49 @@ public class ExtratorCadastro {
 
 		File excelfile = excelgen.getFile();
 		System.out.println(excelfile.getAbsolutePath());
+		if (excelfile.exists() && excelfile.length() != 0) {
+			System.out.println("Arquivo OK");
+		}
+
+		this.emailSender.myMailRaw(cleanEmails(this.email),
+				"cadastro empresas: " + this.ultimaData, "Até:"
+						+ this.ultimaData,
+				new String[] { tmpfile.getAbsolutePath() });
+
 		this.ultimaData = Calendar.getInstance().getTime();
 		this.updateUltimaData();
+
+		while (!tmpfile.delete()) {
+			Thread.sleep(500);
+		}
+
+	}
+
+	private static String[] cleanEmails(String all) {
+		String[] mm = all.split("\\,");
+		Vector<String> mmv = new Vector<String>();
+
+		for (String mail : mm) {
+			mail = mail.trim();
+			if (mail != null && !mail.trim().isEmpty() && !mail.equals("null")
+					&& !mail.equals("@")) {
+				if (!mmv.contains(mail)) {
+					mmv.add(mail);
+				}
+			}
+		}
+
+		String[] mms = new String[mmv.size()];
+		mmv.toArray(mms);
+		return mms;
 	}
 
 	// /////////////////////////////////////////////////////
 	// /////////////////////////////////////////////////////
 	// /////////////////////////////////////////////////////
 	public static void main(String[] args) {
-		ExtratorCadastro ex = new ExtratorCadastro(null);
+		ExtratorCadastro ex = new ExtratorCadastro(null,
+				"crhisnoriega@gmail.com");
 
 		TNFe t1 = new TNFe();
 		t1.setInfNFe(new InfNFe());
