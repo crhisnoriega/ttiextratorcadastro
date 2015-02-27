@@ -44,7 +44,8 @@ public class ExcelDocumentoGenerador {
 	private HSSFWorkbook workbook;
 	private FileOutputStream out;
 	private HSSFSheet sheet;
-	private int counter;
+	private int rownumber;
+	private int workbooknumber;
 
 	private String tmpFile;
 
@@ -60,24 +61,41 @@ public class ExcelDocumentoGenerador {
 		// this.sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 	}
 
-	// private boolean hasHeader = false;
+	private boolean hasHeader = false;
 
 	public void fill(Object info) {
+		if (this.rownumber > 65000) {
+			this.rownumber = 0;
+			this.workbooknumber++;
+			this.hasHeader = false;
+			this.sheet = workbook
+					.createSheet("emitentes" + this.workbooknumber);
+
+		}
 
 		Hashtable<String, ObjectMethodPair> vv = extractAttributes(info);
 
-		/*
-		 * if (!this.hasHeader) { this.createHeader(); this.hasHeader = true; }
-		 */
+		if (!this.hasHeader) {
+			this.createHeader();
+			this.hasHeader = true;
+		}
 
 		if (!vv.isEmpty()) {
 			this.createRow(vv, info.getClass());
 		}
 
+		try {
+			this.out.flush();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 	}
 
 	private void createHeader() {
-		Row header = this.sheet.createRow(this.counter++);
+
+		Row header = this.sheet.createRow(this.rownumber++);
 
 		int counter = 0;
 		for (String key : this.keys) {
@@ -88,7 +106,8 @@ public class ExcelDocumentoGenerador {
 
 	private void createRow(Hashtable<String, ObjectMethodPair> vv,
 			Class<? extends Object> class1) {
-		Row header = this.sheet.createRow(this.counter++);
+
+		Row header = this.sheet.createRow(this.rownumber++);
 
 		int counter = 0;
 
@@ -141,7 +160,6 @@ public class ExcelDocumentoGenerador {
 		this.fileout = new File(this.tmpFile);
 		this.out = new FileOutputStream(fileout);
 		this.workbook = new HSSFWorkbook();
-		this.sheet = workbook.createSheet();
 
 		Row r = null;
 		Cell c = null;
@@ -188,7 +206,9 @@ public class ExcelDocumentoGenerador {
 		// cs2.setFont(f2);
 
 		// set the sheet name in Unicode
-		this.workbook.setSheetName(0, "emitentes");
+		this.sheet = workbook.createSheet("emitentes" + this.workbooknumber);
+		// this.workbook.setSheetName(this.workbooknumber,
+		// "emitentes"+this.workbooknumber);
 
 		this.sheet.setColumnWidth(0, 400 * 14);
 		this.sheet.setColumnWidth(1, 400 * 7);
@@ -204,7 +224,7 @@ public class ExcelDocumentoGenerador {
 		this.sheet.setColumnWidth(11, 400 * 14);
 		this.sheet.setColumnWidth(12, 400 * 14);
 
-		this.createHeader();
+		// this.createHeader();
 	}
 
 	public File generatePDF() {

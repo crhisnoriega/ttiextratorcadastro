@@ -3,6 +3,7 @@ package br.com.tti.extratorcadastro;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.lang.reflect.Method;
+import java.sql.ResultSet;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -138,8 +139,14 @@ public class ExtratorCadastro {
 		XMLGenerator cteXMLGen = new XMLGenerator(
 				"br.com.tti.extratorcadastro.xml.esquemas.cte");
 
-		List<String> xmls = this.conx.findXMLs(this.ultimaData);
-		for (String xmlString : xmls) {
+		ResultSet result = this.conx.findXMLFromRS(this.ultimaData);
+		// for (String xmlString : xmls) {
+
+		int counter = 0;
+		while (result.next()) {
+
+			String xmlString = result.getString("XMLSTRING");
+
 			if (xmlString == null) {
 				continue;
 			}
@@ -162,6 +169,16 @@ public class ExtratorCadastro {
 				excelgen.fill(cte.getInfCte().getReceb());
 				excelgen.fill(cte.getInfCte().getExped());
 				excelgen.fill(cte.getInfCte().getIde().getToma4());
+			}
+
+			try {
+				counter++;
+				if (counter >= 50) {
+					counter = 0;
+					System.gc();
+				}
+			} catch (Exception e) {
+
 			}
 
 		}

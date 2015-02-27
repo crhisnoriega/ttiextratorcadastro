@@ -27,8 +27,8 @@ public class ConexaoBD {
 	private ConfiguracaoSistema conf;
 	private TIPO_BANCO type;
 
-	public ConexaoBD(String url, String driver, String usuario,
-			String senha) throws Exception {
+	public ConexaoBD(String url, String driver, String usuario, String senha)
+			throws Exception {
 		super();
 		this.url = url;
 		this.driver = driver;
@@ -99,6 +99,25 @@ public class ConexaoBD {
 		}
 
 		return xmls;
+	}
+
+	public ResultSet findXMLFromRS(Date fromData) throws Exception {
+
+		String sql = "";
+
+		if (TIPO_BANCO.TTIREC.equals(this.getType())) {
+			sql = "SELECT ID,XMLSTRING FROM XMLINFO WHERE DATARECEBIDA >=?";
+		}
+
+		if (TIPO_BANCO.TTINFE.equals(this.getType())) {
+			sql = "SELECT ID,XMLSTRING FROM ESTADONFE WHERE DATAGERADA >=?";
+		}
+
+		PreparedStatement stat = this.conx.prepareStatement(sql);
+		stat.setDate(1, new java.sql.Date(fromData.getTime()));
+		ResultSet result = stat.executeQuery();
+
+		return result;
 	}
 
 }
