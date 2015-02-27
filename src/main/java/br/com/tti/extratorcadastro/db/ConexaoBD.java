@@ -10,10 +10,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import br.com.tti.extratorcadastro.db.ConexaoBancoDados.TIPO_BANCO;
+import br.com.tti.extratorcadastro.db.ConexaoBD.TIPO_BANCO;
 import br.com.tti.sefaz.systemconfig.schema.ArquivoConfiguracao.ConfiguracaoSistema;
 
-public class ConexaoBancoDados {
+public class ConexaoBD {
 
 	public static enum TIPO_BANCO {
 		TTIREC, TTINFE
@@ -27,7 +27,7 @@ public class ConexaoBancoDados {
 	private ConfiguracaoSistema conf;
 	private TIPO_BANCO type;
 
-	public ConexaoBancoDados(String url, String driver, String usuario,
+	public ConexaoBD(String url, String driver, String usuario,
 			String senha) throws Exception {
 		super();
 		this.url = url;
@@ -40,7 +40,7 @@ public class ConexaoBancoDados {
 				this.senha);
 	}
 
-	public ConexaoBancoDados(ConfiguracaoSistema conf) throws Exception {
+	public ConexaoBD(ConfiguracaoSistema conf) throws Exception {
 		super();
 		this.conf = conf;
 		this.url = this.conf.getConf().getUrlBancoDados();

@@ -13,8 +13,8 @@ import java.util.Vector;
 
 import javax.xml.bind.JAXBElement;
 
-import br.com.tti.extratorcadastro.db.ConexaoBancoDados;
-import br.com.tti.extratorcadastro.db.ConexaoBancoDados.TIPO_BANCO;
+import br.com.tti.extratorcadastro.db.ConexaoBD;
+import br.com.tti.extratorcadastro.db.ConexaoBD.TIPO_BANCO;
 import br.com.tti.extratorcadastro.email.EmailSender;
 import br.com.tti.extratorcadastro.excel.ExcelDocumentoGenerador;
 import br.com.tti.extratorcadastro.xml.XMLGenerator;
@@ -26,7 +26,7 @@ import br.com.tti.tools.ReadFile;
 
 public class ExtratorCadastro {
 
-	private ConexaoBancoDados conx;
+	private ConexaoBD conx;
 	private EmailSender emailSender;
 	private Date ultimaData;
 	private SimpleDateFormat sdf;
@@ -37,7 +37,7 @@ public class ExtratorCadastro {
 		this.email = email;
 
 		try {
-			this.conx = new ConexaoBancoDados(conf);
+			this.conx = new ConexaoBD(conf);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -124,6 +124,7 @@ public class ExtratorCadastro {
 		return xml;
 	}
 
+	@SuppressWarnings("unchecked")
 	public void extract() throws Exception {
 		File tmpfile = new File(System.getProperty("user.dir") + File.separator
 				+ File.createTempFile("log_tti", ".log").getName());
@@ -166,13 +167,14 @@ public class ExtratorCadastro {
 		}
 
 		File excelfile = excelgen.getFile();
-		System.out.println(excelfile.getAbsolutePath());
+
+		System.out.println("Arquivo:" + excelfile.getAbsolutePath());
 		if (excelfile.exists() && excelfile.length() != 0) {
 			System.out.println("Arquivo OK");
 		}
 
 		this.emailSender.myMailRaw(cleanEmails(this.email),
-				"cadastro empresas: " + this.ultimaData, "Até:"
+				"cadastro empresas: " + this.ultimaData, "até: "
 						+ this.ultimaData,
 				new String[] { tmpfile.getAbsolutePath() });
 

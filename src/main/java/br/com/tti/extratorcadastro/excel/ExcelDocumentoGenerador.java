@@ -39,7 +39,7 @@ public class ExcelDocumentoGenerador {
 
 	protected File fileout;
 
-	private SimpleDateFormat sdf;
+	// private SimpleDateFormat sdf;
 
 	private HSSFWorkbook workbook;
 	private FileOutputStream out;
@@ -50,27 +50,25 @@ public class ExcelDocumentoGenerador {
 
 	private String[] keys = new String[] { "CNPJ", "CPF", "XNome", "XFant",
 			"IE", "CEP", "XLgr", "Nro", "XBairro", "XMun", "CMun", "XCpl",
-			"Fone", "CPais", "XPais" };
+			"Fone", "CPais", "XPais", "email" };
 
 	public ExcelDocumentoGenerador(String tmpFile,
 			Hashtable<String, String> headerdata) {
 		super();
 		this.tmpFile = tmpFile;
 		this.headerdata = headerdata;
-		this.sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-
+		// this.sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 	}
 
-	private boolean hasHeader = false;
+	// private boolean hasHeader = false;
 
 	public void fill(Object info) {
 
 		Hashtable<String, ObjectMethodPair> vv = extractAttributes(info);
 
-		if (!this.hasHeader) {
-			this.createHeader(vv);
-			this.hasHeader = true;
-		}
+		/*
+		 * if (!this.hasHeader) { this.createHeader(); this.hasHeader = true; }
+		 */
 
 		if (!vv.isEmpty()) {
 			this.createRow(vv, info.getClass());
@@ -78,7 +76,7 @@ public class ExcelDocumentoGenerador {
 
 	}
 
-	private void createHeader(Hashtable<String, ObjectMethodPair> vv) {
+	private void createHeader() {
 		Row header = this.sheet.createRow(this.counter++);
 
 		int counter = 0;
@@ -205,6 +203,8 @@ public class ExcelDocumentoGenerador {
 		this.sheet.setColumnWidth(10, 400 * 14);
 		this.sheet.setColumnWidth(11, 400 * 14);
 		this.sheet.setColumnWidth(12, 400 * 14);
+
+		this.createHeader();
 	}
 
 	public File generatePDF() {
