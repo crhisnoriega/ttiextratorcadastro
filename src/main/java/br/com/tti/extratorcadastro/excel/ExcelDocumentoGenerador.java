@@ -10,6 +10,7 @@ import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 
@@ -47,13 +48,13 @@ public class ExcelDocumentoGenerador {
 	private int rownumber;
 	private int workbooknumber;
 
-	private String tmpFile;
+	private File tmpFile;
 
 	private String[] keys = new String[] { "CNPJ", "CPF", "XNome", "XFant",
 			"IE", "CEP", "XLgr", "Nro", "XBairro", "XMun", "CMun", "XCpl",
 			"Fone", "CPais", "XPais", "email" };
 
-	public ExcelDocumentoGenerador(String tmpFile,
+	public ExcelDocumentoGenerador(File tmpFile,
 			Hashtable<String, String> headerdata) {
 		super();
 		this.tmpFile = tmpFile;
@@ -63,7 +64,7 @@ public class ExcelDocumentoGenerador {
 
 	private boolean hasHeader = false;
 
-	public void fill(Object info) {
+	public boolean fill(Object info, List<String> cnpjsv) {
 		if (this.rownumber > 65000) {
 			this.rownumber = 0;
 			this.workbooknumber++;
@@ -74,6 +75,37 @@ public class ExcelDocumentoGenerador {
 		}
 
 		Hashtable<String, ObjectMethodPair> vv = extractAttributes(info);
+		if (vv.containsKey("CNPJ")) {
+			try {
+				ObjectMethodPair cnpjobj = vv.get("CNPJ");
+				Object cnpjvalue = cnpjobj.getMethod().invoke(info,
+						new Object[] {});
+				if (cnpjvalue != null) {
+					String cnpjstr = cnpjvalue.toString();
+					if (cnpjsv.contains(cnpjstr)) {
+						return false;
+					}
+				}
+			} catch (Exception e) {
+				// TODO: handle exception
+			}
+		}
+
+		if (vv.containsKey("CPF")) {
+			try {
+				ObjectMethodPair cnpjobj = vv.get("CPF");
+				Object cnpjvalue = cnpjobj.getMethod().invoke(info,
+						new Object[] {});
+				if (cnpjvalue != null) {
+					String cnpjstr = cnpjvalue.toString();
+					if (cnpjsv.contains(cnpjstr)) {
+						return false;
+					}
+				}
+			} catch (Exception e) {
+				// TODO: handle exception
+			}
+		}
 
 		if (!this.hasHeader) {
 			this.createHeader();
@@ -91,6 +123,7 @@ public class ExcelDocumentoGenerador {
 			e.printStackTrace();
 		}
 
+		return true;
 	}
 
 	private void createHeader() {
@@ -157,7 +190,7 @@ public class ExcelDocumentoGenerador {
 
 	public void init() throws Exception {
 
-		this.fileout = new File(this.tmpFile);
+		this.fileout = this.tmpFile;
 		this.out = new FileOutputStream(fileout);
 		this.workbook = new HSSFWorkbook();
 

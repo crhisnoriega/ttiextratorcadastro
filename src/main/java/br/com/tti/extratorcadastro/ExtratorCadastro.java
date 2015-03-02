@@ -32,10 +32,15 @@ public class ExtratorCadastro {
 	private Date ultimaData;
 	private SimpleDateFormat sdf;
 	private String email;
+	private List<String> cnpjsv;
+	private Long maxl;
 
-	public ExtratorCadastro(ConfiguracaoSistema conf, String email) {
+	public ExtratorCadastro(ConfiguracaoSistema conf, List<String> cnpjsv,
+			String email, Long maxl) {
 		this.sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:SSS");
 		this.email = email;
+		this.cnpjsv = cnpjsv;
+		this.maxl = maxl;
 
 		try {
 			this.conx = new ConexaoBD(conf);
@@ -125,13 +130,17 @@ public class ExtratorCadastro {
 		return xml;
 	}
 
+	private int fileNumber = 1;
+
 	@SuppressWarnings("unchecked")
 	public void extract() throws Exception {
-		File tmpfile = new File(System.getProperty("user.dir") + File.separator
-				+ File.createTempFile("log_tti", ".log").getName());
 
 		ExcelDocumentoGenerador excelgen = new ExcelDocumentoGenerador(
-				tmpfile.getAbsolutePath(), new Hashtable<String, String>());
+				new File(System.getProperty("user.dir")
+						+ File.separator
+						+ File.createTempFile(
+								"log_tti_" + (fileNumber++) + "_", ".log")
+								.getName()), new Hashtable<String, String>());
 		excelgen.init();
 
 		XMLGenerator nfeXMLGen = new XMLGenerator(
@@ -142,66 +151,141 @@ public class ExtratorCadastro {
 		ResultSet result = this.conx.findXMLFromRS(this.ultimaData);
 		// for (String xmlString : xmls) {
 
-		int counter = 0;
+		long counter = 0L;
+
 		while (result.next()) {
+
+			boolean wasAdded = false;
 
 			String xmlString = result.getString("XMLSTRING");
 
-			if (xmlString == null) {
+			if (xmlString == null || xmlString.isEmpty()) {
 				continue;
 			}
+
 			if (xmlString.contains("<NFe")) {
 				xmlString = this.extractNFeXML(xmlString);
 				TNFe nfe = ((JAXBElement<TNFe>) nfeXMLGen.toObject(xmlString))
 						.getValue();
-				excelgen.fill(nfe.getInfNFe().getEmit());
-				excelgen.fill(nfe.getInfNFe().getDest());
-				excelgen.fill(nfe.getInfNFe().getTransp().getTransporta());
+
+				wasAdded = excelgen
+						.fill(nfe.getInfNFe().getEmit(), this.cnpjsv);
+				wasAdded = excelgen
+						.fill(nfe.getInfNFe().getDest(), this.cnpjsv);
+				wasAdded = excelgen.fill(nfe.getInfNFe().getTransp()
+						.getTransporta(), this.cnpjsv);
 			}
 
 			if (xmlString.contains("<CTe")) {
 				xmlString = this.extractCTeXML(xmlString);
 				TCTe cte = ((JAXBElement<TCTe>) cteXMLGen.toObject(xmlString))
 						.getValue();
-				excelgen.fill(cte.getInfCte().getEmit());
-				excelgen.fill(cte.getInfCte().getDest());
-				excelgen.fill(cte.getInfCte().getRem());
-				excelgen.fill(cte.getInfCte().getReceb());
-				excelgen.fill(cte.getInfCte().getExped());
-				excelgen.fill(cte.getInfCte().getIde().getToma4());
+
+				wasAdded = excelgen
+						.fill(cte.getInfCte().getEmit(), this.cnpjsv);
+				wasAdded = excelgen
+						.fill(cte.getInfCte().getDest(), this.cnpjsv);
+				wasAdded = excelgen.fill(cte.getInfCte().getRem(), this.cnpjsv);
+				wasAdded = excelgen.fill(cte.getInfCte().getReceb(),
+						this.cnpjsv);
+				wasAdded = true;
+				wasAdded = excelgen.fill(cte.getInfCte().getExped(),
+						this.cnpjsv);
+
+				wasAdded = excelgen.fill(cte.getInfCte().getIde().getToma4(),
+						this.cnpjsv);
+
 			}
 
 			try {
-				counter++;
-				if (counter >= 50) {
+
+				if (wasAdded) {
+					counter++;
+				}
+
+				if (counter >= this.maxl) {
 					counter = 0;
 					System.gc();
+
+					// enviando email
+					if (excelgen != null) {
+						File excelfile = excelgen.getFile();
+
+						System.out.println("Arquivo:"
+								+ excelfile.getAbsolutePath());
+						if (excelfile.exists() && excelfile.length() != 0) {
+							System.out.println("Arquivo OK");
+						}
+
+						this.emailSender.myMailRaw(
+								cleanEmails(this.email),
+								"cadastro empresas: "
+										+ this.sdf.format(this.ultimaData),
+								"arquivo: " + excelfile.getName(),
+								new String[] { excelfile.getAbsolutePath() });
+
+						while (!excelfile.delete()) {
+							Thread.sleep(500);
+						}
+
+						System.out.println("");
+					}
+
+					// criando nova planilha
+					{
+						excelgen = new ExcelDocumentoGenerador(new File(
+								System.getProperty("user.dir")
+										+ File.separator
+										+ File.createTempFile(
+												"log_tti_" + (fileNumber++)
+														+ "_", ".log")
+												.getName()),
+								new Hashtable<String, String>());
+						excelgen.init();
+					}
 				}
 			} catch (Exception e) {
-
+				e.printStackTrace();
 			}
 
 		}
 
-		File excelfile = excelgen.getFile();
+		{
+			if (counter != 0) {
+				File excelfile = excelgen.getFile();
 
-		System.out.println("Arquivo:" + excelfile.getAbsolutePath());
-		if (excelfile.exists() && excelfile.length() != 0) {
-			System.out.println("Arquivo OK");
+				System.out.println("Arquivo:" + excelfile.getAbsolutePath());
+				if (excelfile.exists() && excelfile.length() != 0) {
+					System.out.println("Arquivo OK");
+				}
+
+				this.emailSender.myMailRaw(
+						cleanEmails(this.email),
+						"cadastro empresas: "
+								+ this.sdf.format(this.ultimaData), "arquivo: "
+								+ excelfile.getName(),
+						new String[] { excelfile.getAbsolutePath() });
+
+				this.ultimaData = Calendar.getInstance().getTime();
+				this.updateUltimaData();
+
+				while (!excelfile.delete()) {
+					Thread.sleep(500);
+				}
+
+				System.out.println("");
+			} else {
+				System.out.println("Nada novo");
+
+				this.ultimaData = Calendar.getInstance().getTime();
+				this.updateUltimaData();
+
+				File excelfile = excelgen.getFile();
+				while (!excelfile.delete()) {
+					Thread.sleep(500);
+				}
+			}
 		}
-
-		this.emailSender.myMailRaw(cleanEmails(this.email),
-				"cadastro empresas: " + this.ultimaData, "até: "
-						+ this.ultimaData,
-				new String[] { tmpfile.getAbsolutePath() });
-
-		this.ultimaData = Calendar.getInstance().getTime();
-		this.updateUltimaData();
-
-		while (!tmpfile.delete()) {
-			Thread.sleep(500);
-		}
-
 	}
 
 	private static String[] cleanEmails(String all) {
@@ -227,8 +311,8 @@ public class ExtratorCadastro {
 	// /////////////////////////////////////////////////////
 	// /////////////////////////////////////////////////////
 	public static void main(String[] args) {
-		ExtratorCadastro ex = new ExtratorCadastro(null,
-				"crhisnoriega@gmail.com");
+		ExtratorCadastro ex = new ExtratorCadastro(null, null,
+				"crhisnoriega@gmail.com", 200L);
 
 		TNFe t1 = new TNFe();
 		t1.setInfNFe(new InfNFe());
